@@ -1,7 +1,7 @@
 import keras
 import keras.backend as K
 from keras.layers import Input, Conv3D, GlobalMaxPooling3D, MaxPooling3D, BatchNormalization
-from keras.layers import Conv2D, MaxPooling2D, GlobalMaxPooling2D, Dense, Activation, Dropout
+from keras.layers import Conv2D, MaxPooling2D, GlobalMaxPooling2D, Dense, Activation, Dropout, Flatten
 from keras.models import Model
 from keras.optimizers import sgd, Adam
 from keras.losses import binary_crossentropy, categorical_crossentropy
@@ -18,6 +18,7 @@ class BuildNetwork(object):
     def __init__(self, batch_size, number_classes, epochs, train_labels, val_labels,
                  cnn_dim, data_aug=False, num_filters=16, depth=3, lr=1e-3):
         self.batch_size = batch_size
+        self.input_shape = (15,208,250,1)
         self.num_class = number_classes
         self.epochs = epochs
         self.num_filters = num_filters
@@ -63,7 +64,7 @@ class BuildNetwork(object):
         self.stride = 1
         self.num_conv_layers = 2
         self.curr_resblock=[]
-        inputs = Input(shape=input_shape)
+        inputs = Input(shape=self.input_shape)
 
         for res_block in range(self.depth):
             self.curr_resblock = res_block
@@ -88,7 +89,7 @@ class BuildNetwork(object):
                       padding='same', kernel_initializer=keras.initializers.he_normal(seed=7), kernel_regularizer=l2(1e-4))
         x = inputs
         x = conv(x)
-        x = BatchNormalization(axis=4)(x)
+        x = BatchNormalization(axis=-1)(x)
         x = Activation(self.activation)(x)
         return x
 
@@ -106,7 +107,7 @@ class BuildNetwork(object):
                 y = BuildNetwork.res_layer_3d(self, inputs=y)
         x = keras.layers.add([x,y])
         # x = Activation(self.activation)(x)
-        #x = MaxPooling3D(pool_size=(1,2,2))(x)
+        x = MaxPooling3D(pool_size=(1,2,2))(x)
         return x
 
     def cnn_3d(self):
@@ -118,14 +119,7 @@ class BuildNetwork(object):
         self.stride = 1
         self.num_conv_layers = 2
         self.curr_resblock=[]
-        inputs = Input(shape=(None,None,None,1))
-
-        # conv_input = Conv3D(filters=8, kernel_size=7, strides=self.stride,
-        #               padding='same', kernel_initializer=keras.initializers.he_normal(seed=7), kernel_regularizer=l2(1e-4))
-        # c1 = conv_input(inputs)
-        # c1 = BatchNormalization(axis=4)(c1)
-        # c1 = Activation(self.activation)(c1)
-
+        inputs = Input(shape=self.input_shape, batch_shape=(self.batch_size,15,208,250,1))
         for res_block in range(self.depth):
             self.curr_resblock = res_block
             print('Creating ResBlock: ', res_block)
@@ -134,10 +128,18 @@ class BuildNetwork(object):
             else:
                 x = BuildNetwork.res_block_3d(self, x)
             self.num_filters *= 2
-        gp = GlobalMaxPooling3D()(x)
-        FC1 = Dense(6,activation=self.activation, kernel_initializer=keras.initializers.he_normal(seed=7))(gp)
+        # gp = GlobalMaxPooling3D()(x)
+        c1 = Conv3D(1,kernel_size=(1,1,1),strides=self.stride, padding='same',
+                    kernel_initializer=keras.initializers.he_normal(seed=7), kernel_regularizer=l2(1e-4))(x)
+        c1 = BatchNormalization(axis=-1)(c1)
+        c1 = Activation(self.activation)(c1)
+
+        f = Flatten()(c1)
+        FC1 = Dense(32,activateion=self.activation, kernel_initializer=keras.initializers.he_normal(seed=7))(f)
         DP1 = Dropout(0.5)(FC1)
-        outputs = Dense(self.num_class,activation='softmax')(DP1)
+        FC2 = Dense(6,activation=self.activation, kernel_initializer=keras.initializers.he_normal(seed=7))(DP1)
+        DP2 = Dropout(0.5)(FC2)
+        outputs = Dense(self.num_class,activation='softmax')(DP2)
         cnn3d = Model(inputs=inputs, outputs=outputs)
         cnn3d.compile(loss='categorical_crossentropy', optimizer=Adam(lr=self.lr,beta_1=0.9,beta_2=0.999,epsilon=1e-6,
                                                                       amsgrad=True), metrics=['accuracy'])

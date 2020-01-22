@@ -174,21 +174,20 @@ parser.add_argument('-e', metavar='Number of epochs', type=int, help='Number of 
 parser.add_argument('-d', metavar='CNN depth', type=int, help='Number of res blocks')
 parser.add_argument('-l', metavar='Learning rate', type=float, help='Specify initial learning rate')
 parser.add_argument('-c', metavar='Number of filters', type=int, help='Number of convolution kernels in first layer')
+parser.add_argument('-f', metavar='Train on RAM/HD', type=int, help='Train on RAM or hard-drive')
 
 args = vars(parser.parse_args())
 
 BATCHSIZE = args["b"]
 EPOCHS = args["e"]
 NUM_CLASSES = args["n"]
+RAM_FLAG = args["f"]
 
-# base_path = "/MULTIX/DATA/INPUT/disk1/IQA_DATASET_WITHOUT_1_SLICE/BASELESS/"
-# apex_path = "/MULTIX/DATA/INPUT/disk1/IQA_DATASET_WITHOUT_1_SLICE/APEXLESS/"
-# # both_path = "/MULTIX/DATA/INPUT/disk3/IQA_DATASET_WITHOUT_3_SLICES/BOTHLESS/"
-# full_path = "/MULTIX/DATA/INPUT/disk1/IQA_DATASET_WITHOUT_1_SLICE/FULL/"
+apex_path = "/MULTIX/DATA/INPUT/disk1/IQA_DATASET_WITHOUT_1_SLICE/APEXLESS/"
+base_path = "/MULTIX/DATA/INPUT/disk1/IQA_DATASET_WITHOUT_1_SLICE/BASELESS/"
+# both_path = "/MULTIX/DATA/INPUT/disk3/IQA_DATASET_WITHOUT_3_SLICES/BOTHLESS/"
+full_path = "/MULTIX/DATA/INPUT/disk1/IQA_DATASET_WITHOUT_1_SLICE/FULL/"
 
-base_path = "/usr/not-backed-up2/nishant/IQA/IQA_DATASET_WITHOUT_1_SLICE/Baseless/"
-apex_path = "/usr/not-backed-up2/nishant/IQA/IQA_DATASET_WITHOUT_1_SLICE/Apexless"
-full_path = "/usr/not-backed-up2/nishant/IQA/IQA_DATASET_WITHOUT_1_SLICE/Full"
 train_paths, val_paths, y_train, y_val = get_image_paths(base_path, apex_path, full_path)
 
 num_train = len(y_train)
@@ -200,19 +199,20 @@ print('Number of training samples = ', num_train)
 # print("Size of training labels = ", y_train.shape)
 
 train_gen = Datagen.DataGenerator(y_train,folder_paths=train_paths,input_samples=None,num_classes=NUM_CLASSES,
-                                  batch_size=BATCHSIZE,shuffle=True, RAM=False)
+                                  batch_size=BATCHSIZE,shuffle=True, RAM=RAM_FLAG)
 val_gen = Datagen.DataGenerator(y_val,folder_paths=val_paths,input_samples=None,num_classes=NUM_CLASSES,
-                                batch_size=BATCHSIZE,shuffle=True,RAM=False)
+                                batch_size=BATCHSIZE,shuffle=True,RAM=RAM_FLAG)
 
 # train_gen = train_batch_dir_generator(train_paths,y_train)
 # val_gen = val_batch_dir_generator(val_paths,y_val)
 
 img, label = next(train_gen)
+print(img.shape)
 tmp = np.squeeze(img[0,4,:,:,0])
 plt.plot(tmp)
 plt.imsave('ex_img',tmp,cmap='gray')
 
-print("Example image shape = ", img.shape)
+print("Example image shape = ", tmp.shape)
 print("Training label = ", label)
 
 data_aug = False
@@ -240,6 +240,7 @@ plot_losses = Generate_plots.PlotLosses()
 callbacks = [checkpoint, lr_reducer, plot_losses, early_stopping]
 
 print('####################### Starting training ########################')
-history = model.fit_generator(generator=train_gen, steps_per_epoch=num_train//BATCHSIZE, epochs=EPOCHS, verbose=1,
-                              callbacks=callbacks, validation_data=val_gen, validation_steps=len(y_val))
+history = model.fit_generator(generator=train_gen, steps_per_epoch=num_train//BATCHSIZE,
+                              epochs=EPOCHS, verbose=1, callbacks=callbacks, use_multiprocessing=True,
+                              validation_data=val_gen, validation_steps=len(y_val)//BATCHSIZE)
 
