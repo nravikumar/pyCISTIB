@@ -135,7 +135,7 @@ class BuildNetwork(object):
         c1 = Activation(self.activation)(c1)
 
         f = Flatten()(c1)
-        FC1 = Dense(32,activateion=self.activation, kernel_initializer=keras.initializers.he_normal(seed=7))(f)
+        FC1 = Dense(32,activation=self.activation, kernel_initializer=keras.initializers.he_normal(seed=7))(f)
         DP1 = Dropout(0.5)(FC1)
         FC2 = Dense(6,activation=self.activation, kernel_initializer=keras.initializers.he_normal(seed=7))(DP1)
         DP2 = Dropout(0.5)(FC2)

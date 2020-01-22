@@ -11,8 +11,8 @@ from Data_gen import Datagen
 
 def get_image_paths(base_path, apex_path, full_path):
     # Get image file paths
-    num_pat = 10
-    num_train = 8
+    num_pat = 300
+    num_train = 250
 
     print('Reading dicom images...')
     folder_pattern = ''.join('/image/time0*/SAX/')
@@ -51,6 +51,7 @@ def get_image_paths(base_path, apex_path, full_path):
     print("Number of validation images currently = ", len(val_labels))
     print('Baseless images done..')
 
+    folder_list = []
     all_pat_folders = os.listdir(apex_path)
     for idx, pid in enumerate(all_pat_folders):
         if idx<num_pat:
@@ -80,6 +81,7 @@ def get_image_paths(base_path, apex_path, full_path):
     print("Number of validation images currently = ", len(val_labels))
     print('Apexless images done..')
 
+    folder_list = []
     all_pat_folders = os.listdir(full_path)
     for idx, pid in enumerate(all_pat_folders):
         if idx<num_pat:
