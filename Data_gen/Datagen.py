@@ -77,10 +77,12 @@ class DataGenerator(keras.utils.Sequence):
 
     def __data_generator_HD(self, current_list_IDs):
         # Generates batches with samples read from hard-drive
-        batch_x=[]
-        batch_y=[]
-        fx = 15
+
+        fx = 16
+        fy = 220
         fz = 250
+        batch_x=np.empty((self.batch_size,fx,fy,fz,1))
+        batch_y=[]
         for i, pidx in enumerate(current_list_IDs):
             folder_path = self.folder_paths[pidx]
             tmp_x = self.get_input_image(folder_path)
@@ -89,6 +91,10 @@ class DataGenerator(keras.utils.Sequence):
             pad_size = fx - l_x
             pad_array = np.zeros((pad_size, tmp_x.shape[1], tmp_x.shape[2]))
             tmp_x = np.concatenate((tmp_x,pad_array),axis=0)
+            l_y = tmp_x.shape[1]
+            pad_size = fy - l_y
+            pad_array = np.zeros((tmp_x.shape[0], pad_size, tmp_x.shape[2]))
+            tmp_x = np.concatenate((tmp_x,pad_array),axis=1)
             l_z = tmp_x.shape[2]
             pad_size = fz - l_z
             pad_array = np.zeros((tmp_x.shape[0], tmp_x.shape[1], pad_size))
@@ -96,9 +102,11 @@ class DataGenerator(keras.utils.Sequence):
             # tmp_x = np.expand_dims(tmp_x, axis=0)
             tmp_x = np.expand_dims(tmp_x, axis=4)
             # tmp_y = np.expand_dims(tmp_y, axis=0)
-            batch_x.append(tmp_x)
+            #print(tmp_x.shape)
+            batch_x[i,] = tmp_x
+            #batch_x.append(tmp_x)
             batch_y.append(keras.utils.to_categorical(tmp_y, num_classes=self.num_classes))
-        batch_x = np.asarray(batch_x)
+        #batch_x = np.asarray(batch_x)
         batch_y = np.asarray(batch_y)
         # print("Current batch shape = ", batch_x.shape)
         return batch_x, batch_y

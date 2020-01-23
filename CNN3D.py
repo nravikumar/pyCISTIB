@@ -15,7 +15,7 @@ def get_image_paths(base_path, apex_path, full_path):
     num_train = 250
 
     print('Reading dicom images...')
-    folder_pattern = ''.join('/image/time0*/SAX/')
+    folder_pattern = ''.join('/image/time001/SAX/')
 
     folder_list = []
     train_paths=[]
@@ -185,10 +185,10 @@ EPOCHS = args["e"]
 NUM_CLASSES = args["n"]
 RAM_FLAG = args["f"]
 
-apex_path = "/MULTIX/DATA/INPUT/disk1/IQA_DATASET_WITHOUT_1_SLICE/APEXLESS/"
-base_path = "/MULTIX/DATA/INPUT/disk1/IQA_DATASET_WITHOUT_1_SLICE/BASELESS/"
+apex_path = "/MULTIX/DATA/INPUT/disk3/IQA_DATASET_WITHOUT_3_SLICES/APEXLESS/"
+base_path = "/MULTIX/DATA/INPUT/disk3/IQA_DATASET_WITHOUT_3_SLICES/BASELESS/"
 # both_path = "/MULTIX/DATA/INPUT/disk3/IQA_DATASET_WITHOUT_3_SLICES/BOTHLESS/"
-full_path = "/MULTIX/DATA/INPUT/disk1/IQA_DATASET_WITHOUT_1_SLICE/FULL/"
+full_path = "/MULTIX/DATA/INPUT/disk3/IQA_DATASET_WITHOUT_3_SLICES/FULL/"
 
 train_paths, val_paths, y_train, y_val = get_image_paths(base_path, apex_path, full_path)
 
@@ -236,8 +236,8 @@ file_path = os.path.join(save_dir,model_name)
 # Create model checkpoints
 checkpoint = ModelCheckpoint(filepath=file_path, monitor='val_acc', verbose=1, save_best_only=True)
 
-lr_reducer = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, min_lr=1e-12)
-early_stopping = EarlyStopping(monitor='val_loss',min_delta=1e-8,patience=10,mode='auto')
+lr_reducer = ReduceLROnPlateau(monitor='val_loss', factor=0.9, patience=5, min_lr=1e-12)
+early_stopping = EarlyStopping(monitor='val_loss',min_delta=1e-6,patience=10,mode='auto')
 plot_losses = Generate_plots.PlotLosses()
 callbacks = [checkpoint, lr_reducer, plot_losses, early_stopping]
 
