@@ -5,14 +5,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import keras
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau, EarlyStopping
-from resnet3d import BuildCNN
+# from resnet3d import BuildCNN
+from densenet3d import Densenet3D
 from Utils import Generate_plots
 from Data_gen import Datagen
 
 def get_image_paths(base_path, apex_path, full_path):
     # Get image file paths
-    num_pat = 300
-    num_train = 250
+    num_pat = 400
+    num_train = 300
 
     print('Reading dicom images...')
     folder_pattern = ''.join('/image/time001/SAX/')
@@ -20,12 +21,17 @@ def get_image_paths(base_path, apex_path, full_path):
     folder_list = []
     train_paths=[]
     val_paths=[]
-    all_pat_folders = os.listdir(base_path)
+    tmp_pat_folders = os.listdir(base_path)
+    tindx = np.arange(len(tmp_pat_folders))
+    np.random.shuffle(tindx)
+    all_pat_folders = []
+
+    for t in tindx:
+        all_pat_folders.append(tmp_pat_folders[t])
     for idx, pid in enumerate(all_pat_folders):
-        if idx<num_pat:
+        if idx < num_pat:
             tmp_folder = ''.join(pid) + folder_pattern
             folder_list.append(sorted(glob.glob(base_path + tmp_folder)))
-
     print("Number of patient folders = ", len(folder_list))
     train_labels=[]
     val_labels=[]
@@ -39,12 +45,14 @@ def get_image_paths(base_path, apex_path, full_path):
                 try:
                     train_labels.append(1)
                 except:
+                    print('Exception caught: ', pat_folder)
                     continue
             elif num_train <= idx < num_pat:
                 try:
                     val_paths.append(pat_folder)
                     val_labels.append(1)
                 except:
+                    print('Exception caught: ', pat_folder)
                     continue
 
     print("Number of training images currently = ", len(train_labels))
@@ -52,12 +60,17 @@ def get_image_paths(base_path, apex_path, full_path):
     print('Baseless images done..')
 
     folder_list = []
-    all_pat_folders = os.listdir(apex_path)
+    tmp_pat_folders = os.listdir(apex_path)
+    tindx = np.arange(len(tmp_pat_folders))
+    np.random.shuffle(tindx)
+    all_pat_folders = []
+
+    for t in tindx:
+        all_pat_folders.append(tmp_pat_folders[t])
     for idx, pid in enumerate(all_pat_folders):
         if idx<num_pat:
             tmp_folder = ''.join(pid) + folder_pattern
             folder_list.append(sorted(glob.glob(apex_path + tmp_folder)))
-
     print("Number of patient folders = ", len(folder_list))
     for idx, folder in enumerate(folder_list):
         print("Patient number: ", idx)
@@ -69,12 +82,14 @@ def get_image_paths(base_path, apex_path, full_path):
                     train_paths.append(pat_folder)
                     train_labels.append(2)
                 except:
+                    print('Exception caught: ', pat_folder)
                     continue
             elif num_train <= idx < num_pat:
                 try:
                     val_paths.append(pat_folder)
                     val_labels.append(2)
                 except:
+                    print('Exception caught: ', pat_folder)
                     continue
 
     print("Number of training images currently = ", len(train_labels))
@@ -82,7 +97,13 @@ def get_image_paths(base_path, apex_path, full_path):
     print('Apexless images done..')
 
     folder_list = []
-    all_pat_folders = os.listdir(full_path)
+    tmp_pat_folders = os.listdir(full_path)
+    tindx = np.arange(len(tmp_pat_folders))
+    np.random.shuffle(tindx)
+    all_pat_folders = []
+    for t in tindx:
+        all_pat_folders.append(tmp_pat_folders[t])
+
     for idx, pid in enumerate(all_pat_folders):
         if idx<num_pat:
             tmp_folder = ''.join(pid) + folder_pattern
@@ -99,12 +120,14 @@ def get_image_paths(base_path, apex_path, full_path):
                     train_paths.append(pat_folder)
                     train_labels.append(0)
                 except:
+                    print('Exception caught: ', pat_folder)
                     continue
             elif num_train <= idx < num_pat:
                 try:
                     val_paths.append(pat_folder)
                     val_labels.append(0)
                 except:
+                    print('Exception caught: ', pat_folder)
                     continue
 
     print("Number of training images currently = ", len(train_labels))
@@ -195,18 +218,10 @@ train_paths, val_paths, y_train, y_val = get_image_paths(base_path, apex_path, f
 num_train = len(y_train)
 print('Number of training samples = ', num_train)
 
-# Convert class vectors to binary class matrices
-# y_train = keras.utils.to_categorical(y_train, NUM_CLASSES)
-# y_val = keras.utils.to_categorical(y_val, NUM_CLASSES)
-# print("Size of training labels = ", y_train.shape)
-
 train_gen = Datagen.DataGenerator(y_train,folder_paths=train_paths,input_samples=None,num_classes=NUM_CLASSES,
                                   batch_size=BATCHSIZE,shuffle=True, RAM=RAM_FLAG)
 val_gen = Datagen.DataGenerator(y_val,folder_paths=val_paths,input_samples=None,num_classes=NUM_CLASSES,
                                 batch_size=BATCHSIZE,shuffle=True,RAM=RAM_FLAG)
-
-# train_gen = train_batch_dir_generator(train_paths,y_train)
-# val_gen = val_batch_dir_generator(val_paths,y_val)
 
 img, label = next(train_gen)
 print(img.shape)
@@ -219,14 +234,14 @@ print("Training label = ", label)
 
 data_aug = False
 depth = args["d"]
-cnn_model = BuildCNN.BuildNetwork(args["b"], args["n"], args["e"], y_train, y_val,
-                         args["d"], data_aug, args["c"], depth, args["l"])
+cnn_model = Densenet3D.BuildNetwork(args["b"], args["n"], args["e"], y_train, y_val,
+                                    data_aug, args["c"], depth, args["l"])
 
 model = cnn_model.cnn_3d()
 print(model.summary())
 
-save_dir = os.path.join(os.getcwd(), 'saved_models')
-model_name = '3DCNN_%s_model_{epoch:03d}.h5'
+save_dir = os.path.join(os.getcwd(), 'CV1')
+model_name = 'DenseNet_e2_%s_model_{epoch:03d}.h5'
 
 if not os.path.isdir(save_dir):
     os.makedirs(save_dir)
