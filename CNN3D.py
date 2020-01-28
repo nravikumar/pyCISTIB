@@ -261,3 +261,8 @@ history = model.fit_generator(generator=train_gen, steps_per_epoch=num_train//BA
                               epochs=EPOCHS, verbose=1, callbacks=callbacks, use_multiprocessing=True,
                               validation_data=val_gen, validation_steps=len(y_val)//BATCHSIZE)
 
+#################### Writing accuracy and loss plot history to file ####################################
+
+Generate_plots.PlotLosses.plot_history(history,save_dir)
+
+

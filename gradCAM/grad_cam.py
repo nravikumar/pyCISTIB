@@ -44,25 +44,24 @@ class Build_GCAMnet(object):
         self.depth = depth
         self.lr = lr
 
-    @staticmethod
-    def cnn_3d():
+    def cnn_3d(self):
         # Create CNN architecture
-        gcamNet = Build_GCAMnet()
+        gcamNet = Densenet3D.BuildNetwork()
         gcamNet.kernel_size = 3
         gcamNet.activation='relu'
         # self.activation = LeakyReLU(alpha=0.3)
-        Build_GCAMnet.stride = 1
-        Build_GCAMnet.num_conv_layers = 2
-        Build_GCAMnet.curr_resblock=[]
+        gcamNet.stride = 1
+        gcamNet.num_conv_layers = 2
+        gcamNet.curr_resblock=[]
         print('Initial learning rate = ', gcamNet.lr)
         inputs = Input(shape=gcamNet.input_shape, batch_shape=(gcamNet.batch_size,16,220,250,1))
         for block in range(gcamNet.depth):
             gcamNet.curr_resblock = block
             print('Creating DenseBlock: ', block)
             if block == 0:
-                x = Densenet3D.BuildNetwork.dense_block(self, inputs)
+                x = Densenet3D.BuildNetwork.dense_block(gcamNet, inputs)
             else:
-                x = Densenet3D.BuildNetwork.dense_block(self, x)
+                x = Densenet3D.BuildNetwork.dense_block(gcamNet, x)
             gcamNet.num_filters *= 2
         gp = GlobalAveragePooling3D(name='GAP')(x)
         c1 = Conv3D(3,kernel_size=(1,1,1),strides=gcamNet.stride, padding='same',
@@ -71,12 +70,12 @@ class Build_GCAMnet(object):
         c1 = Activation(gcamNet.activation)(c1)
 
         f = Flatten()(c1)
-        FC1 = Dense(32,activation=self.activation, kernel_initializer=keras.initializers.he_normal(seed=7))(f)
+        FC1 = Dense(32,activation=gcamNet.activation, kernel_initializer=keras.initializers.he_normal(seed=7))(f)
         #DP1 = Dropout(0.5)(FC1)
-        FC2 = Dense(6,activation=self.activation, kernel_initializer=keras.initializers.he_normal(seed=7))(FC1)
+        FC2 = Dense(6,activation=gcamNet.activation, kernel_initializer=keras.initializers.he_normal(seed=7))(FC1)
         DP2 = Dropout(0.5)(FC2)
-        class_outputs = Dense(self.num_class,name='class',activation='softmax')(DP2)
-        loc_outputs = Dense(self.num_class,name='loc',activation='softmax')(gp)
+        class_outputs = Dense(gcamNet.num_class,name='class',activation='softmax')(DP2)
+        loc_outputs = Dense(gcamNet.num_class,name='loc',activation='softmax')(gp)
         outputs = keras.layers.add([class_outputs,loc_outputs])
         outputs = K.mean(outputs,axis=-1)
         cnn3d = Model(inputs=inputs, outputs=outputs)

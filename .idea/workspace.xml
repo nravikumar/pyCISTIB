@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4fabe915-e3a2-49ad-8de6-2b9f1471d682" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/CNN3D.py" beforeDir="false" afterPath="$PROJECT_DIR$/CNN3D.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utils/Generate_plots.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utils/Generate_plots.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gradCAM/grad_cam.py" beforeDir="false" afterPath="$PROJECT_DIR$/gradCAM/grad_cam.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -12,13 +14,25 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/CNN3D.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="734">
-              <caret line="237" column="74" lean-forward="true" selection-start-line="237" selection-start-column="74" selection-end-line="237" selection-end-column="74" />
+            <state relative-caret-position="790">
+              <caret line="267" selection-start-line="267" selection-end-line="267" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Utils/Generate_plots.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="881">
+              <caret line="52" column="19" lean-forward="true" selection-start-line="52" selection-start-column="19" selection-end-line="52" selection-end-column="19" />
+              <folding>
+                <element signature="e#0#12#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -39,7 +53,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/densenet3d/Densenet3D.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="722">
+            <state relative-caret-position="1334">
               <caret line="92" column="46" lean-forward="true" selection-start-line="92" selection-start-column="46" selection-end-line="92" selection-end-column="46" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
@@ -51,8 +65,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/densenet3d/Densenet3D_VarInput.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="280">
-              <caret line="29" column="20" lean-forward="true" selection-start-line="29" selection-start-column="20" selection-end-line="29" selection-end-column="20" />
+            <state relative-caret-position="450">
+              <caret line="60" column="28" selection-start-line="60" selection-start-column="13" selection-end-line="60" selection-end-column="28" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
               </folding>
@@ -60,11 +74,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/gradCAM/grad_cam.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="536">
-              <caret line="70" column="47" lean-forward="true" selection-start-line="70" selection-start-column="47" selection-end-line="70" selection-end-column="47" />
+            <state relative-caret-position="348">
+              <caret line="60" column="26" lean-forward="true" selection-start-line="60" selection-start-column="26" selection-end-line="60" selection-end-column="26" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
               </folding>
@@ -119,10 +133,11 @@
         <option value="$PROJECT_DIR$/../AppData/Local/Temp/Mxt111/RemoteFiles/199746_27_123/Densenet3D.py" />
         <option value="$PROJECT_DIR$/../AppData/Local/Temp/Mxt111/RemoteFiles/199746_27_125/CNN3D.py" />
         <option value="$PROJECT_DIR$/../AppData/Local/Temp/Mxt111/RemoteFiles/199746_27_126/Densenet3D.py" />
-        <option value="$PROJECT_DIR$/CNN3D.py" />
         <option value="$PROJECT_DIR$/densenet3d/Densenet3D_VarInput.py" />
         <option value="$PROJECT_DIR$/densenet3d/Densenet3D.py" />
         <option value="$PROJECT_DIR$/gradCAM/grad_cam.py" />
+        <option value="$PROJECT_DIR$/Utils/Generate_plots.py" />
+        <option value="$PROJECT_DIR$/CNN3D.py" />
       </list>
     </option>
   </component>
@@ -136,7 +151,7 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
+  <component name="ProjectFrameBounds" extendedState="7">
     <option name="x" value="-318" />
     <option name="y" value="-11" />
     <option name="width" value="1932" />
@@ -174,6 +189,11 @@
               <item name="pyCISTIB" type="b2602c69:ProjectViewProjectNode" />
               <item name="pyCISTIB" type="462c0819:PsiDirectoryNode" />
               <item name="resnet3d" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="pyCISTIB" type="b2602c69:ProjectViewProjectNode" />
+              <item name="pyCISTIB" type="462c0819:PsiDirectoryNode" />
+              <item name="Utils" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -568,30 +588,10 @@
     <entry file="file://$PROJECT_DIR$/Data_gen/gradCAM/__init__.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/CNN3D.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="734">
-          <caret line="237" column="74" lean-forward="true" selection-start-line="237" selection-start-column="74" selection-end-line="237" selection-end-column="74" />
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../AppData/Local/Temp/Mxt111/RemoteFiles/199746_27_133/Densenet3D.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="255">
           <caret line="15" column="27" lean-forward="true" selection-start-line="15" selection-start-column="27" selection-end-line="15" selection-end-column="27" />
-          <folding>
-            <element signature="e#0#12#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/densenet3d/Densenet3D_VarInput.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="280">
-          <caret line="29" column="20" lean-forward="true" selection-start-line="29" selection-start-column="20" selection-end-line="29" selection-end-column="20" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
           </folding>
@@ -610,8 +610,18 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/densenet3d/Densenet3D.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="722">
+        <state relative-caret-position="1334">
           <caret line="92" column="46" lean-forward="true" selection-start-line="92" selection-start-column="46" selection-end-line="92" selection-end-column="46" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/densenet3d/Densenet3D_VarInput.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="450">
+          <caret line="60" column="28" selection-start-line="60" selection-start-column="13" selection-end-line="60" selection-end-column="28" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
           </folding>
@@ -620,10 +630,30 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/gradCAM/grad_cam.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="536">
-          <caret line="70" column="47" lean-forward="true" selection-start-line="70" selection-start-column="47" selection-end-line="70" selection-end-column="47" />
+        <state relative-caret-position="348">
+          <caret line="60" column="26" lean-forward="true" selection-start-line="60" selection-start-column="26" selection-end-line="60" selection-end-column="26" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Utils/Generate_plots.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="881">
+          <caret line="52" column="19" lean-forward="true" selection-start-line="52" selection-start-column="19" selection-end-line="52" selection-end-column="19" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CNN3D.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="790">
+          <caret line="267" selection-start-line="267" selection-end-line="267" />
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
           </folding>
         </state>
       </provider>

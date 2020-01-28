@@ -4,6 +4,7 @@ import os
 
 
 class PlotLosses(keras.callbacks.Callback):
+
     def on_train_begin(self, logs={}):
         self.i = 0
         self.j = 0
@@ -39,23 +40,26 @@ class PlotLosses(keras.callbacks.Callback):
         plt.savefig('model_accuracy.png')
         plt.close()
 
-def plot_history(history, result_dir):
-    plt.plot(history.history['acc'], marker='.')
-    plt.plot(history.history['val_acc'], marker='.')
-    plt.title('model accuracy')
-    plt.xlabel('epoch')
-    plt.ylabel('accuracy')
-    plt.grid()
-    plt.legend(['acc', 'val_acc'], loc='lower right')
-    plt.savefig(os.path.join(result_dir, 'model_accuracy.png'))
-    plt.close()
+    @staticmethod
+    def plot_history(history, result_dir):
+        plt.plot(history.history['acc'], marker='.')
+        plt.plot(history.history['val_acc'], marker='.')
+        plt.title('model accuracy')
+        plt.xlabel('epoch')
+        plt.ylabel('accuracy')
+        plt.grid()
+        plt.legend(['acc', 'val_acc'], loc='lower right')
+        plt.savefig(os.path.join(result_dir, 'model_accuracy_history.png'))
+        plt.close()
 
-    plt.plot(history.history['loss'], marker='.')
-    plt.plot(history.history['val_loss'], marker='.')
-    plt.title('model loss')
-    plt.xlabel('epoch')
-    plt.ylabel('loss')
-    plt.grid()
-    plt.legend(['loss', 'val_loss'], loc='upper right')
-    plt.savefig(os.path.join(result_dir, 'model_loss.png'))
-    plt.close()
+        plt.plot(history.history['loss'], marker='.')
+        plt.plot(history.history['val_loss'], marker='.')
+        plt.title('model loss')
+        plt.xlabel('epoch')
+        plt.ylabel('loss')
+        plt.grid()
+        plt.legend(['loss', 'val_loss'], loc='upper right')
+        plt.savefig(os.path.join(result_dir, 'model_loss_history.png'))
+        plt.close()
+
+
