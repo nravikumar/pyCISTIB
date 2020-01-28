@@ -50,8 +50,8 @@ class DataGenerator(keras.utils.Sequence):
         self.n += 1
         return result
 
-
-    def get_input_image(self, batch_path):
+    @staticmethod
+    def get_input_image(batch_path):
         reader = sitk.ImageSeriesReader()
         dc_names = reader.GetGDCMSeriesFileNames(batch_path)
         reader.SetFileNames(dc_names)
@@ -77,7 +77,6 @@ class DataGenerator(keras.utils.Sequence):
 
     def __data_generator_HD(self, current_list_IDs):
         # Generates batches with samples read from hard-drive
-
         fx = 16
         fy = 220
         fz = 250

@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import keras
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau, EarlyStopping
 # from resnet3d import BuildCNN
+from sklearn.metrics import classification_report
 from densenet3d import Densenet3D
 from Utils import Generate_plots
 from Data_gen import Datagen
@@ -261,8 +262,29 @@ history = model.fit_generator(generator=train_gen, steps_per_epoch=num_train//BA
                               epochs=EPOCHS, verbose=1, callbacks=callbacks, use_multiprocessing=True,
                               validation_data=val_gen, validation_steps=len(y_val)//BATCHSIZE)
 
-#################### Writing accuracy and loss plot history to file ####################################
-
 Generate_plots.PlotLosses.plot_history(history,save_dir)
+
+######################################## Predict on test data and plot results #########################################
+
+# First get all test/validation images and labels
+val_images=[]
+y_pred=[]
+for i, pidx in enumerate(val_paths):
+    test_img = Datagen.DataGenerator.get_input_image(pidx)
+    y_pred[i] = model.predict(test_img, batch_size=1, verbose=1)
+
+fig, TP, TN, FP, FN = Generate_plots.PlotLosses.plot_confusion_matrix(y_val, y_pred, labels=[0, 1, 2])
+
+print('Number of True Positives = ', TP)
+print('Number of False Positives = ', FP)
+print('Number of True Negatives = ', TN)
+print('Number of False Negatives = ', FN)
+
+cf_report = classification_report(y_val,y_pred,labels=[0,1,2],target_names=['Full coverage', 'Missing Basal Slice',
+                                                                            'Missing Apical Slice'],
+                                  output_dict=True)
+
+print('Summary of label-wise classification report:\n', cf_report)
+
 
 

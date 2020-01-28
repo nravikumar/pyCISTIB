@@ -1,5 +1,8 @@
 import keras
 import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sb
+from sklearn.metrics import confusion_matrix
 import os
 
 
@@ -61,5 +64,28 @@ class PlotLosses(keras.callbacks.Callback):
         plt.legend(['loss', 'val_loss'], loc='upper right')
         plt.savefig(os.path.join(result_dir, 'model_loss_history.png'))
         plt.close()
+
+    @staticmethod
+    def plot_confusion_matrix(y_true, y_pred, labels=None):
+        cmat = confusion_matrix(y_true, y_pred, labels) # labels: array of shape n_classes
+        TN, FP, FN, TP = confusion_matrix(y_true, y_pred).ravel()
+        fig_size=(10,10)
+        font_size = 15
+
+        df_cm = pd.DataFrame(cmat,index=labels,columns=labels)
+        fig = plt.figure(figsize=fig_size)
+
+        try:
+            heatmap = sb.heatmap(df_cm, annot=True, fmt="d")
+        except ValueError:
+            raise ValueError("Confusion matrix values must be integers")
+
+        heatmap.yaxis.set_ticklabels(heatmap.yaxis.get_ticklabels(), rotation=0, ha='right', fontsize=font_size)
+        heatmap.xaxis.set_ticklabels(heatmap.xaxis.get_ticklabels(), rotation=0, ha='right', fontsize=font_size)
+        plt.ylabel('Ground Truth Labels')
+        plt.xlabel('Predicted Labels')
+        plt.savefig('confusion_matrix.png')
+        return fig, TP, TN, FP, FN
+
 
 
