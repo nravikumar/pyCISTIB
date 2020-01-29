@@ -10,7 +10,7 @@ from keras.callbacks import ModelCheckpoint, LearningRateScheduler, ReduceLROnPl
 from keras.preprocessing.image import ImageDataGenerator
 from keras.layers.advanced_activations import LeakyReLU
 from keras.utils.vis_utils import plot_model
-from keras.utils import multi_gpu_model
+from keras.utils.multi_gpu_utils import multi_gpu_model
 
 
 class BuildNetwork(object):
@@ -19,7 +19,7 @@ class BuildNetwork(object):
                  data_aug=False, num_filters=16, depth=3, lr=1e-3):
 
         self.batch_size = batch_size
-        self.input_shape = (16,220,250,1)
+        self.input_shape = (3,220,250,1)
         self.num_class = number_classes
         self.epochs = epochs
         self.num_filters = num_filters
@@ -30,6 +30,11 @@ class BuildNetwork(object):
         self.data_aug = data_aug
         self.depth = depth
         self.lr = lr
+        self.kernel_size = (2,3,3)
+        self.activation='relu'
+        # self.activation = LeakyReLU(alpha=0.3)
+        self.stride = 1
+        self.num_conv_layers = 2
 
     def conv_layer(self, inputs):
         conv = Conv3D(self.num_filters, kernel_size=self.kernel_size, strides=self.stride,
@@ -56,11 +61,6 @@ class BuildNetwork(object):
 
     def cnn_3d(self):
         # Create CNN architecture
-        self.kernel_size = 3
-        self.activation='relu'
-        # self.activation = LeakyReLU(alpha=0.3)
-        self.stride = 1
-        self.num_conv_layers = 2
         self.curr_resblock=[]
         print('Initial learning rate = ', self.lr)
         inputs = Input(shape=self.input_shape)
@@ -85,11 +85,12 @@ class BuildNetwork(object):
         DP2 = Dropout(0.5)(FC2)
         outputs = Dense(self.num_class,activation='softmax')(DP2)
         cnn3d = Model(inputs=inputs, outputs=outputs)
-        # parallel_model = multi_gpu_model(cnn3d, gpus=8, cpu_merge=True)
-        cnn3d.compile(loss='categorical_crossentropy', optimizer=Adam(lr=self.lr,beta_1=0.9,beta_2=0.999,epsilon=1e-6,
-                                                                      amsgrad=True), metrics=['accuracy'])
-        # parallel_model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=self.lr,beta_1=0.9,beta_2=0.999,epsilon=1e-6,
+        parallel_model = multi_gpu_model(cnn3d, gpus=8)
+        # cnn3d.compile(loss='categorical_crossentropy', optimizer=Adam(lr=self.lr,beta_1=0.9,beta_2=0.999,epsilon=1e-6,
         #                                                               amsgrad=True), metrics=['accuracy'])
-        plot_model(cnn3d, to_file='CNN3D.png')
-        return cnn3d
+        parallel_model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=self.lr,beta_1=0.9,beta_2=0.999,epsilon=1e-6,
+                                                                      amsgrad=True), metrics=['accuracy'])
+        # plot_model(cnn3d, to_file='CNN3D.png')
+        plot_model(parallel_model, to_file='CNN3D.png')
+        return parallel_model
 

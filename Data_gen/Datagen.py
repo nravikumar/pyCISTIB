@@ -1,12 +1,13 @@
 import numpy as np
 import keras
 import SimpleITK as sitk
-import numpy as np
+
 
 class DataGenerator(keras.utils.Sequence):
     # Generate batches for network training from directory or RAM
 
-    def __init__(self, labels, folder_paths=None, input_samples=None, num_classes=3, batch_size=1, shuffle=True, RAM=0):
+    def __init__(self, labels, folder_paths=None, input_samples=None, num_classes=3, batch_size=1, shuffle=True, RAM=0,
+                 STACK=None):
         self.batch_size=batch_size
         if folder_paths is not None:
             self.list_IDs = np.arange(len(folder_paths))
@@ -21,6 +22,7 @@ class DataGenerator(keras.utils.Sequence):
         self.n = 0
         self.max = self.__len__()
         self.on_epoch_end()
+        self.stack_gen = STACK
 
     def __len__(self):
         # Number of batches per epoch
@@ -30,11 +32,15 @@ class DataGenerator(keras.utils.Sequence):
         # Generate one batch of data
         current_indexes = self.current_indexes[idx*self.batch_size:(idx+1)*self.batch_size]
         current_list_IDs = [self.list_IDs[k] for k in current_indexes]
-        # Generate Data from RAM or hard-drive
-        if self.RAM_gen == 1:
-            batch_x, batch_y = self.__data_generator_RAM(current_list_IDs)
+
+        if self.stack_gen is None:
+            # Generate Data from RAM or hard-drive
+            if self.RAM_gen == 1:
+                batch_x, batch_y = self.__data_generator_RAM(current_list_IDs)
+            else:
+                batch_x, batch_y = self.__data_generator_HD(current_list_IDs)
         else:
-            batch_x, batch_y = self.__data_generator_HD(current_list_IDs)
+            batch_x, batch_y = self.__data_gen_stacks(current_list_IDs)
         return batch_x, batch_y
 
     def on_epoch_end(self):
@@ -98,14 +104,51 @@ class DataGenerator(keras.utils.Sequence):
             pad_size = fz - l_z
             pad_array = np.zeros((tmp_x.shape[0], tmp_x.shape[1], pad_size))
             tmp_x = np.concatenate((tmp_x,pad_array),axis=2)
-            # tmp_x = np.expand_dims(tmp_x, axis=0)
             tmp_x = np.expand_dims(tmp_x, axis=4)
-            # tmp_y = np.expand_dims(tmp_y, axis=0)
-            #print(tmp_x.shape)
             batch_x[i,] = tmp_x
-            #batch_x.append(tmp_x)
             batch_y.append(keras.utils.to_categorical(tmp_y, num_classes=self.num_classes))
-        #batch_x = np.asarray(batch_x)
+        batch_y = np.asarray(batch_y)
+        # print("Current batch shape = ", batch_x.shape)
+        return batch_x, batch_y
+
+
+    def __data_gen_stacks(self, current_list_IDs):
+        # Generates batches with samples read from hard-drive
+        fy = 220
+        fz = 250
+        fx = 1
+        stack_size = 3
+        batch_x=np.empty((self.batch_size,stack_size,fy,fz,1))
+        batch_y=[]
+        for i, pidx in enumerate(current_list_IDs):
+            folder_path = self.folder_paths[pidx]
+            tmp_x = self.get_input_image(folder_path)
+            tmp_y = self.labels[pidx]
+            l_x = tmp_x.shape[0]
+            l_y = tmp_x.shape[1]
+            pad_size = fy - l_y
+            pad_array = np.zeros((tmp_x.shape[0], pad_size, tmp_x.shape[2]))
+            tmp_x = np.concatenate((tmp_x,pad_array),axis=1)
+            l_z = tmp_x.shape[2]
+            pad_size = fz - l_z
+            pad_array = np.zeros((tmp_x.shape[0], tmp_x.shape[1], pad_size))
+            tmp_x = np.concatenate((tmp_x,pad_array),axis=2)
+            # Now extract 3-slice stacks
+            if tmp_y == 0: # Full coverage
+                mid_slice = l_x // 2
+                if l_x % 2 == 0:
+                    nstack = tmp_x[mid_slice:mid_slice+stack_size:1, :, :]
+                else:
+                    nstack = tmp_x[mid_slice:mid_slice-stack_size:-1, :, :]
+            elif tmp_y == 1:    # MBS
+                nstack = tmp_x[0:stack_size, :, :]
+            elif tmp_y == 2:    # MAS
+                nstack = tmp_x[:l_x-4:-1, :, :]
+            if nstack.shape[0] != 3:
+                nstack = np.zeros((fx, nstack.shape[1], nstack.shape[2]))
+            tmp_x = np.expand_dims(nstack, axis=4)
+            batch_x[i,] = tmp_x
+            batch_y.append(keras.utils.to_categorical(tmp_y, num_classes=self.num_classes))
         batch_y = np.asarray(batch_y)
         # print("Current batch shape = ", batch_x.shape)
         return batch_x, batch_y

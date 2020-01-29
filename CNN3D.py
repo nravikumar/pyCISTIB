@@ -3,13 +3,14 @@ import os, glob
 import SimpleITK as sitk
 import numpy as np
 import matplotlib.pyplot as plt
-import keras
+import csv
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau, EarlyStopping
 # from resnet3d import BuildCNN
 from sklearn.metrics import classification_report
-from densenet3d import Densenet3D
+from densenet3d import DenseNet3Dstack, Densenet3D
 from Utils import Generate_plots
 from Data_gen import Datagen
+
 
 def get_image_paths(base_path, apex_path, full_path):
     # Get image file paths
@@ -17,7 +18,7 @@ def get_image_paths(base_path, apex_path, full_path):
     num_train = 300
 
     print('Reading dicom images...')
-    folder_pattern = ''.join('/image/time001/SAX/')
+    folder_pattern = ''.join('/image/time0*/SAX/')
 
     folder_list = []
     train_paths=[]
@@ -62,8 +63,6 @@ def get_image_paths(base_path, apex_path, full_path):
 
     folder_list = []
     tmp_pat_folders = os.listdir(apex_path)
-    tindx = np.arange(len(tmp_pat_folders))
-    np.random.shuffle(tindx)
     all_pat_folders = []
 
     for t in tindx:
@@ -99,8 +98,6 @@ def get_image_paths(base_path, apex_path, full_path):
 
     folder_list = []
     tmp_pat_folders = os.listdir(full_path)
-    tindx = np.arange(len(tmp_pat_folders))
-    np.random.shuffle(tindx)
     all_pat_folders = []
     for t in tindx:
         all_pat_folders.append(tmp_pat_folders[t])
@@ -142,52 +139,6 @@ def get_image_paths(base_path, apex_path, full_path):
     return train_paths, val_paths, train_labels, val_labels
 
 
-# def get_input_image(batch_path):
-#     reader = sitk.ImageSeriesReader()
-#     dc_names = reader.GetGDCMSeriesFileNames(batch_path)
-#     reader.SetFileNames(dc_names)
-#     image = reader.Execute()
-#     arr = sitk.GetArrayFromImage(image)
-#     arr = arr.astype('float32')
-#     arr -= np.mean(arr)
-#     arr = arr / np.std(arr)
-#     return arr
-#
-# def train_batch_dir_generator(train_paths,y_train):
-#     tindx = np.arange(len(train_paths))
-#     np.random.shuffle(tindx)
-#     while True:
-#         for t in tindx:
-#             # select paths/files for current batch with shuffling
-#             batch_path = train_paths[t]
-#             try:
-#                 batch_x = get_input_image(batch_path)
-#                 batch_y = y_train[t]
-#             except:
-#                 continue
-#             batch_x = np.expand_dims(batch_x, axis=0)
-#             batch_x = np.expand_dims(batch_x, axis=4)
-#             batch_y = np.expand_dims(batch_y, axis=0)
-#             yield batch_x, batch_y
-#
-# def val_batch_dir_generator(val_paths,y_val):
-#     tindx = np.arange(len(val_paths))
-#     np.random.shuffle(tindx)
-#     while True:
-#         for t in tindx:
-#             # select paths/files for current batch with shuffling
-#             batch_path = val_paths[t]
-#             try:
-#                 batch_x = get_input_image(batch_path)
-#                 batch_y = y_val[t]
-#             except:
-#                 continue
-#             batch_x = np.expand_dims(batch_x, axis=0)
-#             batch_x = np.expand_dims(batch_x, axis=4)
-#             batch_y = np.expand_dims(batch_y, axis=0)
-#             yield batch_x, batch_y
-
-
 ########################################################################################################################
 # Main code snippet
 ########################################################################################################################
@@ -201,6 +152,8 @@ parser.add_argument('-d', metavar='CNN depth', type=int, help='Number of res blo
 parser.add_argument('-l', metavar='Learning rate', type=float, help='Specify initial learning rate')
 parser.add_argument('-c', metavar='Number of filters', type=int, help='Number of convolution kernels in first layer')
 parser.add_argument('-f', metavar='Train on RAM/HD', type=int, help='Train on RAM or hard-drive')
+parser.add_argument('-s', metavar='Convert volume to 3-slice stack', type=int, default=None,
+                    help='Train on RAM or hard-drive')
 
 args = vars(parser.parse_args())
 
@@ -208,6 +161,7 @@ BATCHSIZE = args["b"]
 EPOCHS = args["e"]
 NUM_CLASSES = args["n"]
 RAM_FLAG = args["f"]
+STACK_FLAG = args["s"]
 
 apex_path = "/MULTIX/DATA/INPUT/disk3/IQA_DATASET_WITHOUT_3_SLICES/APEXLESS/"
 base_path = "/MULTIX/DATA/INPUT/disk3/IQA_DATASET_WITHOUT_3_SLICES/BASELESS/"
@@ -220,29 +174,34 @@ num_train = len(y_train)
 print('Number of training samples = ', num_train)
 
 train_gen = Datagen.DataGenerator(y_train,folder_paths=train_paths,input_samples=None,num_classes=NUM_CLASSES,
-                                  batch_size=BATCHSIZE,shuffle=True, RAM=RAM_FLAG)
+                                  batch_size=BATCHSIZE,shuffle=True, RAM=RAM_FLAG, STACK=STACK_FLAG)
 val_gen = Datagen.DataGenerator(y_val,folder_paths=val_paths,input_samples=None,num_classes=NUM_CLASSES,
-                                batch_size=BATCHSIZE,shuffle=True,RAM=RAM_FLAG)
+                                batch_size=BATCHSIZE,shuffle=True,RAM=RAM_FLAG, STACK=STACK_FLAG)
 
 img, label = next(train_gen)
 print(img.shape)
-tmp = np.squeeze(img[0,4,:,:,0])
+tmp = np.squeeze(img[0,1,:,:,0])
 plt.plot(tmp)
 plt.imsave('ex_img',tmp,cmap='gray')
 
 print("Example image shape = ", tmp.shape)
-print("Training label = ", label)
+# print("Training label = ", label)
 
 data_aug = False
 depth = args["d"]
-cnn_model = Densenet3D.BuildNetwork(args["b"], args["n"], args["e"], y_train, y_val,
-                                    data_aug, args["c"], depth, args["l"])
+
+if STACK_FLAG is None:
+    cnn_model = Densenet3D.BuildNetwork(args["b"], args["n"], args["e"], y_train, y_val,
+                                        data_aug, args["c"], depth, args["l"])
+else:
+    cnn_model = DenseNet3Dstack.BuildNetwork(args["b"], args["n"], args["e"], y_train, y_val,
+                                             data_aug, args["c"], depth, args["l"])
 
 model = cnn_model.cnn_3d()
 print(model.summary())
 
-save_dir = os.path.join(os.getcwd(), 'CV1')
-model_name = 'DenseNet_e2_%s_model_{epoch:03d}.h5'
+save_dir = os.path.join(os.getcwd(), 'All_TPs_CV2')
+model_name = 'DenseNetStack_e2_model_{epoch:03d}.h5'
 
 if not os.path.isdir(save_dir):
     os.makedirs(save_dir)
@@ -253,7 +212,7 @@ file_path = os.path.join(save_dir,model_name)
 checkpoint = ModelCheckpoint(filepath=file_path, monitor='val_acc', verbose=1, save_best_only=True)
 
 lr_reducer = ReduceLROnPlateau(monitor='val_loss', factor=0.9, patience=5, min_lr=1e-12)
-early_stopping = EarlyStopping(monitor='val_loss',min_delta=1e-6,patience=10,mode='auto')
+early_stopping = EarlyStopping(monitor='val_loss',min_delta=1e-7,patience=10,mode='auto')
 plot_losses = Generate_plots.PlotLosses()
 callbacks = [checkpoint, lr_reducer, plot_losses, early_stopping]
 
@@ -262,29 +221,37 @@ history = model.fit_generator(generator=train_gen, steps_per_epoch=num_train//BA
                               epochs=EPOCHS, verbose=1, callbacks=callbacks, use_multiprocessing=True,
                               validation_data=val_gen, validation_steps=len(y_val)//BATCHSIZE)
 
-Generate_plots.PlotLosses.plot_history(history,save_dir)
+
+Generate_plots.PlotLosses.plot_history(history, save_dir)
+
 
 ######################################## Predict on test data and plot results #########################################
 
-# First get all test/validation images and labels
+# First get all test/validation images, labels and predictions
+val_gen = Datagen.DataGenerator(y_val,folder_paths=val_paths,input_samples=None,num_classes=NUM_CLASSES,
+                                batch_size=1,shuffle=True,RAM=RAM_FLAG, STACK=STACK_FLAG)
 val_images=[]
 y_pred=[]
-for i, pidx in enumerate(val_paths):
-    test_img = Datagen.DataGenerator.get_input_image(pidx)
-    y_pred[i] = model.predict(test_img, batch_size=1, verbose=1)
+y_true = []
 
-fig, TP, TN, FP, FN = Generate_plots.PlotLosses.plot_confusion_matrix(y_val, y_pred, labels=[0, 1, 2])
+i = 0
+while (i<len(y_val)):
+    val_x, val_y = next(val_gen)
+    tmp = model.predict(val_x, batch_size=1, verbose=1)
+    y_pred.append(np.argmax(tmp))
+    y_true.append(np.argmax(val_y))
+    i += 1
 
-print('Number of True Positives = ', TP)
-print('Number of False Positives = ', FP)
-print('Number of True Negatives = ', TN)
-print('Number of False Negatives = ', FN)
+fig = Generate_plots.PlotLosses.generate_confusion_matrix(np.asarray(y_true), np.asarray(y_pred), labels=[0, 1, 2])
 
-cf_report = classification_report(y_val,y_pred,labels=[0,1,2],target_names=['Full coverage', 'Missing Basal Slice',
-                                                                            'Missing Apical Slice'],
+cf_report = classification_report(np.asarray(y_true), np.asarray(y_pred),labels=[0,1,2],
+                                  target_names=['Full coverage', 'Missing Basal Slice', 'Missing Apical Slice'],
                                   output_dict=True)
 
 print('Summary of label-wise classification report:\n', cf_report)
 
-
-
+write_path = os.path.join(save_dir,"classification_results.csv")
+# Write classification report dict to csv file
+w = csv.writer(open(write_path, "w"))
+for key, val in cf_report.items():
+    w.writerow([key,val])

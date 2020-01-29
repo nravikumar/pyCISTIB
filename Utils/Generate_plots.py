@@ -66,11 +66,10 @@ class PlotLosses(keras.callbacks.Callback):
         plt.close()
 
     @staticmethod
-    def plot_confusion_matrix(y_true, y_pred, labels=None):
-        cmat = confusion_matrix(y_true, y_pred, labels) # labels: array of shape n_classes
-        TN, FP, FN, TP = confusion_matrix(y_true, y_pred).ravel()
+    def generate_confusion_matrix(y_true, y_pred, labels=None):
+        cmat = confusion_matrix(y_true, y_pred, labels)     # labels: array of shape n_classes
         fig_size=(10,10)
-        font_size = 15
+        font_size = 20
 
         df_cm = pd.DataFrame(cmat,index=labels,columns=labels)
         fig = plt.figure(figsize=fig_size)
@@ -85,7 +84,7 @@ class PlotLosses(keras.callbacks.Callback):
         plt.ylabel('Ground Truth Labels')
         plt.xlabel('Predicted Labels')
         plt.savefig('confusion_matrix.png')
-        return fig, TP, TN, FP, FN
+        return fig
 
 
 
