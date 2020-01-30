@@ -133,17 +133,16 @@ class DataGenerator(keras.utils.Sequence):
             pad_size = fz - l_z
             pad_array = np.zeros((tmp_x.shape[0], tmp_x.shape[1], pad_size))
             tmp_x = np.concatenate((tmp_x,pad_array),axis=2)
-            # Now extract 3-slice stacks
+            # Now extract 3-slice stacks - for FC, MBS and MAS
             if tmp_y == 0: # Full coverage
-                mid_slice = l_x // 2
                 if l_x % 2 == 0:
-                    nstack = tmp_x[mid_slice:mid_slice+stack_size:1, :, :]
+                    nstack = tmp_x[0:stack_size:1, :, :]
                 else:
-                    nstack = tmp_x[mid_slice:mid_slice-stack_size:-1, :, :]
+                    nstack = tmp_x[l_x-stack_size:l_x:1, :, :]
             elif tmp_y == 1:    # MBS
                 nstack = tmp_x[0:stack_size, :, :]
             elif tmp_y == 2:    # MAS
-                nstack = tmp_x[:l_x-4:-1, :, :]
+                nstack = tmp_x[l_x-stack_size:l_x:1, :, :]
             if nstack.shape[0] != 3:
                 nstack = np.zeros((fx, nstack.shape[1], nstack.shape[2]))
             tmp_x = np.expand_dims(nstack, axis=4)
